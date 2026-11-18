@@ -1,41 +1,39 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
-import { subscribeToAuthChanges } from '../services/authService';
+import { Loading } from '../components/Loading';
+import { AuthProvider } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
-export default function RootLayout() {
-  const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
+const AUTH_ROUTES = ['login', 'register'];
+
+function AuthGuard() {
+  const { user, initializing } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = subscribeToAuthChanges((authUser) => {
-      setUser(authUser);
-      setInitializing(false);
-    });
-    return unsubscribe;
-  }, []);
+  const inAuthRoute = AUTH_ROUTES.includes(segments[0]);
 
   useEffect(() => {
     if (initializing) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      router.replace('/(tabs)'); // ajuste para a rota inicial definida com o João
+    if (!user && !inAuthRoute) {
+      router.replace('/login'); // não autenticado: só vê login/cadastro
+    } else if (user && inAuthRoute) {
+      router.replace('/'); // autenticado: vai para a home (src/app/index.jsx)
     }
-  }, [user, initializing, segments, router]);
+  }, [user, initializing, inAuthRoute, router]);
 
   if (initializing) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <Loading message="Verificando sessão..." />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <AuthGuard />
+    </AuthProvider>
+  );
 }

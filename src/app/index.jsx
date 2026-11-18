@@ -1,10 +1,12 @@
 import React from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { logout, user } = useAuth();
 
   // Simulação de contadores e status (depois virão dos repositórios / hooks)
   const stats = { alunos: 0, cursos: 0, matriculas: 0 };
@@ -66,6 +68,9 @@ export default function HomeScreen() {
 
           <TouchableOpacity style={styles.cepButton} onPress={() => router.push('/cep')}>
             <Text style={styles.cepButtonText}>📍 Consultar CEP (ViaCEP)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <Text style={styles.logoutText}>Sair ({user?.email})</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -155,6 +160,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  logoutButton: {
+  borderWidth: 1.5,
+  borderColor: '#DC2626',
+  padding: 14,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginTop: 16,
+},
+logoutText: { color: '#DC2626', fontSize: 15, fontWeight: '600' },
   menuButtonText: {
     fontSize: 15,
     fontWeight: '600',

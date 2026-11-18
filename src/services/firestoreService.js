@@ -25,18 +25,21 @@ function requireUserId() {
   return uid;
 }
 
-export function buildDocumentPayload(data, existing = null) {
+export function newId(collectionName) {
+  return doc(collection(db, collectionName)).id; // gera ID local, funciona offline
+}
+
+export function buildDocumentPayload(data, existing = null, { keepTimestamps = false } = {}) {
   const uid = requireUserId();
   const now = new Date().toISOString();
-
   return {
     ...existing,
     ...data,
     id: data.id || existing?.id,
-    userId: existing?.userId || uid,
+    userId: existing?.userId || data.userId || uid,
     status: data.status ?? existing?.status ?? 'ativo',
-    createdAt: existing?.createdAt || now,
-    updatedAt: now,
+    createdAt: existing?.createdAt || data.createdAt || now,
+    updatedAt: keepTimestamps ? (data.updatedAt || now) : now,
     syncStatus: data.syncStatus ?? 'synced',
   };
 }
@@ -55,8 +58,9 @@ export async function getById(collectionName, id) {
   return { id: snap.id, ...snap.data() };
 }
 
-export async function upsertDocument(collectionName, payload) {
-  const docData = buildDocumentPayload(payload);
+export async function upsertDocument(collectionName, payload, options) {
+  const docData = buildDocumentPayload(payload, null, options);
+  if (!docData.id) throw new Error('Documento sem id. Use newId() ao criar.');
   const ref = doc(db, collectionName, docData.id);
   await setDoc(ref, docData, { merge: true });
   return docData;
