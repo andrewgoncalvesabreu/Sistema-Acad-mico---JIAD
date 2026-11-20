@@ -7,6 +7,7 @@ import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { Loading } from '../../components/Loading';
 import { OptionSelector } from '../../components/OptionSelector';
+import { CepInput } from '../../components/CepInput';
 import { colors } from '../../styles/colors';
 import { STATUS_OPTIONS } from '../../utils/constants';
 import {
@@ -14,7 +15,6 @@ import {
   toAlunoForm,
   toAlunoPayload,
   formatPhone,
-  formatCep,
   maskDateBr,
 } from '../../utils/formatters';
 import { validateAluno } from '../../utils/validators';
@@ -61,6 +61,26 @@ export default function AlunoFormScreen() {
   function setField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
+
+  // Preenche o endereço automaticamente quando o ViaCEP encontra o CEP.
+  function handleAddressFound(address) {
+    setForm((prev) => ({
+      ...prev,
+      cep: address.cep || prev.cep,
+      logradouro: address.logradouro || '',
+      bairro: address.bairro || '',
+      cidade: address.cidade || '',
+      uf: address.uf || '',
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      cep: undefined,
+      logradouro: undefined,
+      bairro: undefined,
+      cidade: undefined,
+      uf: undefined,
+    }));
   }
 
   async function handleSave() {
@@ -154,16 +174,11 @@ export default function AlunoFormScreen() {
             />
 
             <Text style={styles.section}>Endereço</Text>
-            {/* DAVI: o botão "Buscar CEP" (ViaCEP) entra logo abaixo deste campo e deve
-                preencher logradouro, bairro, cidade e uf usando setField(...). */}
-            <Input
-              label="CEP"
+            <CepInput
               value={form.cep}
-              onChangeText={(v) => setField('cep', formatCep(v))}
+              onChangeText={(v) => setField('cep', v)}
+              onAddressFound={handleAddressFound}
               error={errors.cep}
-              keyboardType="numeric"
-              placeholder="00000-000"
-              maxLength={9}
             />
             <Input
               label="Logradouro"
