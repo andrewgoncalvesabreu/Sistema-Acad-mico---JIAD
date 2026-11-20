@@ -1,16 +1,38 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { listAlunos } from '../repository/alunoRepository';
+import { listCursos } from '../repository/cursoRepository';
+import { matriculaRepository } from '../repository/matriculaRepository';
+import { useNetwork } from '../hooks/useNetwork';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { isOnline } = useNetwork();
+  const [stats, setStats] = useState({ alunos: 0, cursos: 0, matriculas: 0 });
 
-  // Simulação de contadores e status (depois virão dos repositórios / hooks)
-  const stats = { alunos: 0, cursos: 0, matriculas: 0 };
-  const isOnline = true; // Integrará com useNetwork() do Davi
+  const loadStats = useCallback(async () => {
+    try {
+      const [alunos, cursos, matriculas] = await Promise.all([
+        listAlunos(),
+        listCursos(),
+        matriculaRepository.count(),
+      ]);
+      setStats({ alunos: alunos.length, cursos: cursos.length, matriculas });
+    } catch (e) {
+      console.warn('Não foi possível carregar os contadores:', e?.message);
+    }
+  }, []);
+
+  // Recarrega sempre que o painel volta ao foco (depois de cadastrar/excluir).
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+    }, [loadStats])
+  );
 
   return (
     <SafeAreaView style={styles.container}>

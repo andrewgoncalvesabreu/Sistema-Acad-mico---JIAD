@@ -10,7 +10,6 @@ const cursos = createRepository('cursos');
 export const STATUS_MATRICULA = ['ativa', 'concluida', 'cancelada'];
 export const STATUS_LABEL = { ativa: 'Ativa', concluida: 'Concluída', cancelada: 'Cancelada' };
 
-// Validação de campos (pura, sem banco) — a tela usa para mostrar erros embaixo de cada campo.
 export function validateMatricula(values) {
   const errors = {};
   if (!values.alunoId) errors.alunoId = 'Selecione o aluno.';
@@ -72,6 +71,9 @@ function withNames(m, alunoMap, cursoMap) {
 }
 
 export const matriculaRepository = {
+    async count() {
+    return (await matriculas.list()).length;
+  },
   // READ — lista com nome do aluno e do curso (junção feita aqui, não na tela)
   async listWithDetails() {
     const [ms, as, cs] = await Promise.all([matriculas.list(), alunos.list(), cursos.list()]);
