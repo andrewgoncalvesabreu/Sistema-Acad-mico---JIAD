@@ -63,7 +63,7 @@ export default function AlunoFormScreen() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  // Preenche o endereço automaticamente quando o ViaCEP encontra o CEP.
+  // Preenche o endereço automaticamente quando o ViaCEP encontra o CEP. Corrigindo o autocompletar do CEP.
   function handleAddressFound(address) {
     setForm((prev) => ({
       ...prev,
