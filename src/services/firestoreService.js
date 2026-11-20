@@ -15,6 +15,7 @@ export const COLLECTIONS = {
   ALUNOS: 'alunos',
   CURSOS: 'cursos',
   MATRICULAS: 'matriculas',
+  TURMAS: 'turmas'
 };
 
 function requireUserId() {

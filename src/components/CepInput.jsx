@@ -57,13 +57,6 @@ export function CepInput({ value, onChangeText, onAddressFound, error }) {
         error={error}
         accessibilityLabel="CEP"
       />
-      <Button
-        title="Buscar endereço pelo CEP"
-        variant="outline"
-        onPress={() => search(value)}
-        loading={loading}
-        disabled={onlyDigits(value).length !== 8}
-      />
       {message ? (
         <Text
           style={[

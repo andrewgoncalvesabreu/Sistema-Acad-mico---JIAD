@@ -3,7 +3,7 @@
 // A tabela sync_queue é a fila de pendências (outbox) que será enviada ao Firestore.
 
 export const DB_NAME = 'jiad.db';
-export const ENTITIES = ['alunos', 'cursos', 'matriculas'];
+export const ENTITIES = ['alunos', 'cursos', 'matriculas', 'turmas'];
 
 const MIGRATIONS = [
   // v1 — tabelas iniciais
@@ -21,6 +21,22 @@ const MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_${table}_user ON ${table}(userId);
       `);
     }
+
+    // v2 — tabela de turmas (para bancos que já estavam na v1)
+
+    async (db) => {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS turmas (
+        id         TEXT PRIMARY KEY NOT NULL,
+        userId     TEXT NOT NULL,
+        data       TEXT NOT NULL,
+        updatedAt  TEXT NOT NULL,
+        syncStatus TEXT NOT NULL DEFAULT 'synced',
+        deleted    INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE INDEX IF NOT EXISTS idx_turmas_user ON turmas(userId);
+    `);
+  },
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS sync_queue (

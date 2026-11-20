@@ -49,11 +49,19 @@ export interface Matricula extends BaseDoc {
   status: 'ativa' | 'concluida' | 'cancelada';
 }
 
-// Fila de pendências do SQLite (tabela local)
+export interface Turma extends BaseDoc {
+  nome: string;          // ex.: "Turma A"
+  cursoId: string;
+  periodo: string;       // ex.: "2026.2"
+  vagas: number;
+  alunoIds: string[];    // alunos que estão dentro da turma
+  status: 'aberta' | 'encerrada';
+}
+
 export interface SyncOperation {
   id: string;
   operation: 'create' | 'update' | 'delete';
-  entity: 'alunos' | 'cursos' | 'matriculas';
+  entity: 'alunos' | 'cursos' | 'matriculas' | 'turmas';
   entityId: string;
   payload: string;       // JSON do documento
   createdAt: string;
