@@ -1,5 +1,5 @@
 // Modelo de dados do Sistema Acadêmico JIAD.
-// Coleções do Firestore: alunos, cursos, matriculas (documentos com ID gerado por newId()).
+// Coleções do Firestore: alunos, cursos, turmas (documentos com ID gerado por newId()).
 
 export type SyncStatus = 'synced' | 'pending' | 'error';
 

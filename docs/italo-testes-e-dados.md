@@ -1,4 +1,4 @@
-# Alunos e Cursos — dados de demonstração e relato de testes (Italo)
+# Alunos, Cursos e Turmas — dados de demonstração e relato de testes
 
 ## 1. Dados de demonstração
 
@@ -18,6 +18,14 @@
 
 Dados de endereço são fictícios, apenas para demonstração.
 
+### Turmas
+| Nome | Curso | Período | Vagas | Alunos dentro |
+|---|---|---|---|---|
+| Turma 01 - ADS | Análise e Desenvolvimento de Sistemas | 2026.2 | 20 | Maria da Silva, João Pereira |
+| Turma 01 - REDES | Redes de Computadores | 2026.2 | 2 | Ana Souza (e mais uma vaga, para testar a lotação) |
+
+Cada turma pertence a um curso e guarda a lista de alunos dentro dela. Turma nova nasce **aberta** e vazia.
+
 ## 2. Roteiro de testes manuais (preencher com o resultado real)
 
 ### Cursos
@@ -28,8 +36,8 @@ Dados de endereço são fictícios, apenas para demonstração.
 | C3 | Cadastrar outro curso com o mesmo código | Mensagem "Já existe um curso com o código..." | |
 | C4 | Abrir detalhes | Todos os campos exibidos | |
 | C5 | Editar nome e turno | Lista e detalhes mostram os novos dados | |
-| C6 | Excluir curso sem matrículas | Pede confirmação e remove da lista | |
-| C7 | Excluir curso com matrícula | Mensagem de bloqueio, curso permanece | |
+| C6 | Excluir curso sem turmas | Pede confirmação e remove da lista | |
+| C7 | Excluir curso com turma | Mensagem de bloqueio, curso permanece | |
 | C8 | Falha de persistência (sem internet/permissão) | Mensagem de erro, formulário mantém os dados | |
 
 ### Alunos
@@ -45,18 +53,39 @@ Dados de endereço são fictícios, apenas para demonstração.
 | A8 | Buscar por parte do nome na lista | Lista filtrada; sem resultado mostra aviso | |
 | A9 | Abrir detalhes | Dados pessoais e endereço exibidos | |
 | A10 | Editar telefone | Dado atualizado na lista e nos detalhes | |
-| A11 | Excluir aluno sem matrículas | Pede confirmação e remove da lista | |
-| A12 | Excluir aluno com matrícula | Mensagem de bloqueio, aluno permanece | |
+| A11 | Excluir aluno sem turmas | Pede confirmação e remove da lista | |
+| A12 | Excluir aluno que está em uma turma | Mensagem de bloqueio, aluno permanece | |
 | A13 | Falha de persistência (sem internet/permissão) | Mensagem de erro, formulário mantém os dados | |
+
+### Turmas
+| # | Teste | Resultado esperado | Resultado obtido |
+|---|---|---|---|
+| T1 | Salvar formulário vazio | Mensagens de erro em curso, nome, período e vagas; nada é gravado | |
+| T2 | Vagas `0` e depois `201` | "Informe um número de vagas entre 1 e 200." | |
+| T3 | Cadastrar turma válida | Volta para a lista com a turma "Aberta" e `0/N alunos` | |
+| T4 | Cadastrar turma com mesmo curso, nome e período | "Já existe uma turma com este nome neste curso e período." | |
+| T5 | Abrir "Nova turma" com um curso inativo cadastrado | O curso inativo não aparece no seletor | |
+| T6 | Abrir detalhes | Curso, período, vagas e lista de alunos exibidos | |
+| T7 | Adicionar aluno à turma | Aluno aparece na lista e as vagas passam a `1/N` | |
+| T8 | Reabrir o seletor de alunos | Aluno já na turma e aluno inativo não aparecem para adicionar | |
+| T9 | Encher todas as vagas e tentar adicionar mais um aluno | "A turma está lotada. Aumente as vagas para adicionar mais alunos." | |
+| T10 | Remover aluno da turma | Aluno some da lista da turma (continua cadastrado em Alunos) | |
+| T11 | Editar vagas para menos que o total de alunos | "A turma já tem N aluno(s). As vagas não podem ser menores que isso." | |
+| T12 | Encerrar turma | Status "Encerrada"; seletor e botões "Remover" somem | |
+| T13 | Reabrir turma encerrada | Status "Aberta"; seletor e "Remover" voltam | |
+| T14 | Excluir turma | Pede confirmação e remove da lista; os alunos continuam cadastrados | |
+| T15 | Excluir aluno que está em turma / curso que tem turma | Mensagem de bloqueio (ver A12 e C7) | |
+| T16 | Sem internet: cadastrar turma | Turma salva no aparelho com "⏳ Pendente de sincronização" | |
+| T17 | Internet volta | Turma é enviada ao Firestore e o selo de pendente some | |
 
 ## 3. Onde está cada coisa (para a arguição)
 
-| Item | Aluno | Curso |
-|---|---|---|
-| Create / Read / Update / Delete | `src/repository/alunoRepository.jsx` | `src/repository/cursoRepository.jsx` |
-| Telas | `src/screens/alunos/` | `src/screens/cursos/` |
-| Rotas | `src/app/alunos/` | `src/app/cursos/` |
-| Validação | `validateAluno` em `src/utils/validators.jsx` | `validateCurso` |
-| Normalização (formulário ↔ banco) | `toAlunoPayload` / `toAlunoForm` em `src/utils/formatters.jsx` | `toCursoPayload` / `toCursoForm` |
-| Acesso ao Firestore | `src/services/firestoreService.js` (Andrew) | idem |
-| Coleção no Firestore | `alunos` | `cursos` |
+| Item | Aluno | Curso | Turma |
+|---|---|---|---|
+| Create / Read / Update / Delete | `src/repository/alunoRepository.jsx` | `src/repository/cursoRepository.jsx` | `src/repository/turmaRepository.jsx` |
+| Telas | `src/screens/alunos/` | `src/screens/cursos/` | `src/screens/turmas/` |
+| Rotas | `src/app/alunos/` | `src/app/cursos/` | `src/app/turmas/` |
+| Validação | `validateAluno` em `src/utils/validators.jsx` | `validateCurso` | `validateTurma` em `src/repository/turmaRepository.jsx` |
+| Normalização (formulário ↔ banco) | `toAlunoPayload` / `toAlunoForm` em `src/utils/formatters.jsx` | `toCursoPayload` / `toCursoForm` | `normalize` em `turmaRepository.jsx` |
+| Acesso aos dados | `src/services/firestoreService.js` (Andrew) | idem | `src/repository/baseRepository.js` (SQLite + fila) e `src/services/sync/syncService.jsx` |
+| Coleção no Firestore | `alunos` | `cursos` | `turmas` |

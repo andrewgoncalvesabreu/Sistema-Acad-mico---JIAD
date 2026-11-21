@@ -3,7 +3,7 @@
 //   2) se houver internet, a fila é enviada ao Firestore na hora (syncService);
 //   3) sem internet, o dado fica seguro no aparelho e é enviado quando a conexão voltar.
 // Leitura: com internet, atualiza o cache a partir do Firestore; sempre devolve o que está no SQLite.
-// Qualquer entidade (alunos, cursos, matriculas) pode usar: createRepository('alunos').
+// Qualquer entidade (alunos, cursos, cursos) pode usar: createRepository('alunos').
 import { auth } from '../services/firebaseConfig';
 import { newId, listByUser, buildDocumentPayload } from '../services/firestoreService';
 import {
