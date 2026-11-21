@@ -8,6 +8,8 @@ const MAP = {
   cancelada: { label: 'Cancelada', bg: '#FEE2E2', fg: '#991B1B' },
   ativo: { label: 'Ativo', bg: '#DCFCE7', fg: '#166534' },
   inativo: { label: 'Inativo', bg: '#E2E8F0', fg: '#475569' },
+  aberta: { label: 'Aberta', bg: '#DCFCE7', fg: '#166534' },
+  encerrada: { label: 'Encerrada', bg: '#E2E8F0', fg: '#475569' },
 };
 
 export function StatusChip({ status }) {

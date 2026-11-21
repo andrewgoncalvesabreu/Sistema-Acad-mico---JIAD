@@ -14,7 +14,6 @@ import { db, auth } from './firebaseConfig';
 export const COLLECTIONS = {
   ALUNOS: 'alunos',
   CURSOS: 'cursos',
-  MATRICULAS: 'matriculas',
   TURMAS: 'turmas'
 };
 

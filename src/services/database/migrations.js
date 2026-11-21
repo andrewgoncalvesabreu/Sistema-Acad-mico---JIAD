@@ -3,30 +3,15 @@
 // A tabela sync_queue é a fila de pendências (outbox) que será enviada ao Firestore.
 
 export const DB_NAME = 'jiad.db';
-export const ENTITIES = ['alunos', 'cursos', 'matriculas', 'turmas'];
+export const ENTITIES = ['alunos', 'cursos', 'turmas'];
 
-const MIGRATIONS = [
-  // v1 — tabelas iniciais
-  async (db) => {
-    for (const table of ENTITIES) {
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS ${table} (
-          id         TEXT PRIMARY KEY NOT NULL,
-          userId     TEXT NOT NULL,
-          data       TEXT NOT NULL,
-          updatedAt  TEXT NOT NULL,
-          syncStatus TEXT NOT NULL DEFAULT 'synced',
-          deleted    INTEGER NOT NULL DEFAULT 0
-        );
-        CREATE INDEX IF NOT EXISTS idx_${table}_user ON ${table}(userId);
-      `);
-    }
-
-    // v2 — tabela de turmas (para bancos que já estavam na v1)
-
-    async (db) => {
+// Cria a tabela de cada entidade se ainda não existir (idempotente: pode rodar sempre).
+// É chamada a cada abertura do banco, então uma entidade nova em ENTITIES ganha a sua
+// tabela mesmo em bancos criados antes dela existir (sem depender de PRAGMA user_version).
+async function ensureEntityTables(db) {
+  for (const table of ENTITIES) {
     await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS turmas (
+      CREATE TABLE IF NOT EXISTS ${table} (
         id         TEXT PRIMARY KEY NOT NULL,
         userId     TEXT NOT NULL,
         data       TEXT NOT NULL,
@@ -34,9 +19,15 @@ const MIGRATIONS = [
         syncStatus TEXT NOT NULL DEFAULT 'synced',
         deleted    INTEGER NOT NULL DEFAULT 0
       );
-      CREATE INDEX IF NOT EXISTS idx_turmas_user ON turmas(userId);
+      CREATE INDEX IF NOT EXISTS idx_${table}_user ON ${table}(userId);
     `);
-  },
+  }
+}
+
+const MIGRATIONS = [
+  // v1 — tabelas iniciais
+  async (db) => {
+    await ensureEntityTables(db);
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS sync_queue (
@@ -68,4 +59,7 @@ export async function runMigrations(db) {
     version += 1;
     await db.execAsync(`PRAGMA user_version = ${version}`);
   }
+
+  // Garante as tabelas de TODAS as entidades de ENTITIES (inclui as adicionadas depois da v1).
+  await ensureEntityTables(db);
 }

@@ -41,14 +41,6 @@ export interface Curso extends BaseDoc {
   status: 'ativo' | 'inativo';
 }
 
-export interface Matricula extends BaseDoc {
-  alunoId: string;
-  cursoId: string;
-  dataMatricula: string;
-  periodo: string;
-  status: 'ativa' | 'concluida' | 'cancelada';
-}
-
 export interface Turma extends BaseDoc {
   nome: string;          // ex.: "Turma A"
   cursoId: string;
@@ -61,7 +53,7 @@ export interface Turma extends BaseDoc {
 export interface SyncOperation {
   id: string;
   operation: 'create' | 'update' | 'delete';
-  entity: 'alunos' | 'cursos' | 'matriculas' | 'turmas';
+  entity: 'alunos' | 'cursos' | 'turmas';
   entityId: string;
   payload: string;       // JSON do documento
   createdAt: string;

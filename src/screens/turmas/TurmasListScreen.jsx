@@ -7,12 +7,11 @@ import { Loading } from '../../components/Loading';
 import { EmptyList } from '../../components/EmptyList';
 import { StatusChip } from '../../components/StatusChip';
 import { SyncStatusBar } from '../../components/SyncStatusBar';
-import { matriculaRepository } from '../../repository/matriculaRepository';
+import { turmaRepository } from '../../repository/turmaRepository';
 import { useSync } from '../../hooks/useSync';
-import { isoToBr } from '../../utils/dates';
 import { colors } from '../../styles/colors';
 
-export default function MatriculasListScreen() {
+export default function TurmasListScreen() {
   const router = useRouter();
   const { lastSyncAt } = useSync();
   const [items, setItems] = useState([]);
@@ -20,12 +19,15 @@ export default function MatriculasListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
+  // refresh: true  → sincroniza e atualiza do Firestore (ao abrir a tela / puxar para atualizar)
+  // refresh: false → só relê o SQLite (usado quando um sync termina; evita um ciclo infinito,
+  //                  pois ler com refresh dispara outro sync, que dispararia outra leitura...)
+  const load = useCallback(async ({ refresh = true } = {}) => {
     try {
       setError('');
-      setItems(await matriculaRepository.listWithDetails());
+      setItems(await turmaRepository.listWithDetails({ refresh }));
     } catch (e) {
-      setError(e?.message || 'Não foi possível carregar as matrículas.');
+      setError(e?.message || 'Não foi possível carregar as turmas.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -38,20 +40,17 @@ export default function MatriculasListScreen() {
       load();
     }, [load])
   );
-  // ...e quando uma sincronização termina (o selo "pendente" some)
+  // ...e quando uma sincronização termina (o selo "pendente" some), sem novo sync
   useEffect(() => {
-    if (lastSyncAt) load();
+    if (lastSyncAt) load({ refresh: false });
   }, [lastSyncAt, load]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Header
-        title="Matrículas"
+        title="Turmas"
         rightElement={
-          <TouchableOpacity
-            onPress={() => router.push('/matriculas/form')}
-            accessibilityLabel="Nova matrícula"
-          >
+          <TouchableOpacity onPress={() => router.push('/turmas/form')} accessibilityLabel="Nova turma">
             <Text style={styles.add}>+ Nova</Text>
           </TouchableOpacity>
         }
@@ -59,7 +58,7 @@ export default function MatriculasListScreen() {
       <SyncStatusBar />
 
       {loading ? (
-        <Loading message="Carregando matrículas..." />
+        <Loading message="Carregando turmas..." />
       ) : (
         <FlatList
           data={items}
@@ -76,21 +75,23 @@ export default function MatriculasListScreen() {
           }
           ListHeaderComponent={error ? <Text style={styles.error}>{error}</Text> : null}
           ListEmptyComponent={
-            <EmptyList
-              title="Nenhuma matrícula cadastrada"
-              subtitle="Toque em “+ Nova” para matricular um aluno em um curso."
-            />
+            error ? null : (
+              <EmptyList
+                title="Nenhuma turma cadastrada"
+                subtitle="Toque em “+ Nova” para criar uma turma de um curso."
+              />
+            )
           }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.8}
-              onPress={() => router.push(`/matriculas/${item.id}`)}
-              accessibilityLabel={`Matrícula de ${item.alunoNome} em ${item.cursoNome}`}
+              onPress={() => router.push(`/turmas/${item.id}`)}
+              accessibilityLabel={`Turma ${item.nome} do curso ${item.cursoNome}`}
             >
               <View style={styles.row}>
                 <Text style={styles.title} numberOfLines={1}>
-                  {item.alunoNome}
+                  {item.nome}
                 </Text>
                 <StatusChip status={item.status} />
               </View>
@@ -99,7 +100,7 @@ export default function MatriculasListScreen() {
                 {item.cursoCodigo ? ` (${item.cursoCodigo})` : ''}
               </Text>
               <Text style={styles.meta}>
-                Período {item.periodo} • {isoToBr(item.dataMatricula)}
+                Período {item.periodo} • {item.totalAlunos}/{item.vagas} alunos
               </Text>
               {item.syncStatus === 'pending' ? (
                 <Text style={styles.pending}>⏳ Pendente de sincronização</Text>

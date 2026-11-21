@@ -94,8 +94,9 @@ function withCurso(t, cursoMap) {
 
 export const turmaRepository = {
   // READ — lista com nome do curso e total de alunos (junção feita aqui, não na tela)
-  async listWithDetails() {
-    const [ts, cs] = await Promise.all([turmas.list(), cursos.list()]);
+  // refresh: false lê só o SQLite, sem sincronizar (usado pela tela quando um sync acabou de terminar)
+  async listWithDetails({ refresh = true } = {}) {
+    const [ts, cs] = await Promise.all([turmas.list({ refresh }), cursos.list({ refresh })]);
     const cursoMap = new Map(cs.map((c) => [c.id, c]));
     return ts.map((t) => withCurso(t, cursoMap)).sort(byNome);
   },
@@ -196,12 +197,12 @@ export const turmaRepository = {
   // Integridade referencial: alunoRepository e cursoRepository usam antes de excluir.
   async countTurmasDoCurso(cursoId) {
     if (!auth.currentUser) return 0;
-    const todas = await turmas.list({ refresh: false });
+    const todas = await turmas.list(); // atualiza do Firestore antes de contar (checagem de exclusão)
     return todas.filter((t) => t.cursoId === cursoId).length;
   },
   async countTurmasDoAluno(alunoId) {
     if (!auth.currentUser) return 0;
-    const todas = await turmas.list({ refresh: false });
+    const todas = await turmas.list(); // atualiza do Firestore antes de contar (checagem de exclusão)
     return todas.filter((t) => (t.alunoIds || []).includes(alunoId)).length;
   },
 };

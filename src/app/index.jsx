@@ -1,33 +1,33 @@
 import React, { useCallback, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNetwork } from '../hooks/useNetwork';
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { listAlunos } from '../repository/alunoRepository';
 import { listCursos } from '../repository/cursoRepository';
-import { matriculaRepository } from '../repository/matriculaRepository';
-import { useNetwork } from '../hooks/useNetwork';
+import { turmaRepository } from '../repository/turmaRepository';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { logout, user } = useAuth();
   const { isOnline } = useNetwork();
-  const [stats, setStats] = useState({ alunos: 0, cursos: 0, matriculas: 0 });
+  const [stats, setStats] = useState({ alunos: 0, cursos: 0, turmas: 0 });
 
-  const loadStats = useCallback(async () => {
-    try {
-      const [alunos, cursos, matriculas] = await Promise.all([
-        listAlunos(),
-        listCursos(),
-        matriculaRepository.count(),
-      ]);
-      setStats({ alunos: alunos.length, cursos: cursos.length, matriculas });
-    } catch (e) {
-      console.warn('Não foi possível carregar os contadores:', e?.message);
-    }
+  // Cada contador é atualizado assim que a sua consulta termina: se uma coleção demorar
+  // (ex.: Firestore lento), os outros números já aparecem. Falha em um não zera os demais.
+  const loadStats = useCallback(() => {
+    const track = (key, promise, toCount) =>
+      promise
+        .then((result) => setStats((prev) => ({ ...prev, [key]: toCount(result) })))
+        .catch((e) => console.warn(`Não foi possível contar ${key}:`, e?.message));
+
+    track('alunos', listAlunos(), (lista) => lista.length);
+    track('cursos', listCursos(), (lista) => lista.length);
+    track('turmas', turmaRepository.count(), (total) => total);
   }, []);
 
-  // Recarrega sempre que o painel volta ao foco (depois de cadastrar/excluir).
+  // Recarrega sempre que o painel volta ao foco (depois de cadastrar/excluir em outra tela).
   useFocusEffect(
     useCallback(() => {
       loadStats();
@@ -63,9 +63,9 @@ export default function HomeScreen() {
             <Text style={styles.cardLabel}>Cursos</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} onPress={() => router.push('/matriculas')} activeOpacity={0.7}>
-            <Text style={styles.cardNumber}>{stats.matriculas}</Text>
-            <Text style={styles.cardLabel}>Matrículas</Text>
+          <TouchableOpacity style={styles.card} onPress={() => router.push('/turmas')} activeOpacity={0.7}>
+            <Text style={styles.cardNumber}>{stats.turmas}</Text>
+            <Text style={styles.cardLabel}>Turmas</Text>
           </TouchableOpacity>
         </View>
 
@@ -83,8 +83,8 @@ export default function HomeScreen() {
             <Text style={styles.menuArrow}>→</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('/matriculas')}>
-            <Text style={styles.menuButtonText}>📝 Gerenciar Matrículas (CRUD 3)</Text>
+          <TouchableOpacity style={styles.menuButton} onPress={() => router.push('/turmas')}>
+            <Text style={styles.menuButtonText}>🏫 Gerenciar Turmas (CRUD 3)</Text>
             <Text style={styles.menuArrow}>→</Text>
           </TouchableOpacity>
 
@@ -182,15 +182,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  logoutButton: {
-  borderWidth: 1.5,
-  borderColor: '#DC2626',
-  padding: 14,
-  borderRadius: 10,
-  alignItems: 'center',
-  marginTop: 16,
-},
-logoutText: { color: '#DC2626', fontSize: 15, fontWeight: '600' },
   menuButtonText: {
     fontSize: 15,
     fontWeight: '600',
@@ -211,5 +202,18 @@ logoutText: { color: '#DC2626', fontSize: 15, fontWeight: '600' },
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    borderWidth: 1.5,
+    borderColor: '#DC2626',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  logoutText: {
+    color: '#DC2626',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

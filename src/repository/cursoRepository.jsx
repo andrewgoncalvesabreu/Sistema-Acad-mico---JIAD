@@ -11,6 +11,7 @@ import {
   updateDocument,
   removeDocument,
 } from '../services/firestoreService';
+import { turmaRepository } from './turmaRepository';
 
 const COLLECTION = COLLECTIONS.CURSOS;
 
@@ -50,18 +51,13 @@ export async function updateCurso(id, data) {
   return updateDocument(COLLECTION, id, data);
 }
 
-export async function countMatriculasDoCurso(id) {
-  const matriculas = await listByUser(COLLECTIONS.MATRICULAS);
-  return matriculas.filter((m) => m.cursoId === id).length;
-}
-
-// DELETE — bloqueia se houver matrículas ligadas, para não deixar referência quebrada.
+// DELETE — bloqueia se o curso tiver turmas, para não deixar referência quebrada.
 export async function deleteCurso(id) {
-  const total = await countMatriculasDoCurso(id);
+  const total = await turmaRepository.countTurmasDoCurso(id);
   if (total > 0) {
     throw new Error(
-      `Este curso possui ${total} matrícula(s) vinculada(s). ` +
-        'Exclua ou cancele as matrículas antes de excluir o curso, ou marque o curso como inativo.'
+      `Este curso possui ${total} turma(s). ` +
+        'Exclua as turmas antes de excluir o curso, ou marque o curso como inativo.'
     );
   }
   await removeDocument(COLLECTION, id);
